@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Blueprint Editor - Drag & Drop Rooms</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: #16213e;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #0f3460;
+        }
+        
+        .header h1 { font-size: 1.5em; color: #e94560; }
+        
+        .header-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #e94560;
+            color: white;
+        }
+        
+        .btn-primary:hover { background: #c73e54; }
+        
+        .btn-secondary {
+            background: #0f3460;
+            color: white;
+        }
+        
+        .btn-secondary:hover { background: #1a4a7a; }
+        
+        .main-container {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+        
+        .sidebar {
+            width: 300px;
+            background: #16213e;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 2px solid #0f3460;
+        }
+        
+        .sidebar h3 {
+            color: #e94560;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .room-list {
+            margin-bottom: 20px;
+        }
+        
+        .room-item {
+            background: #0f3460;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .room-item:hover { background: #1a4a7a; }
+        .room-item.selected {
+            border-color: #e94560;
+            background: #1a4a7a;
+        }
+        
+        .room-item.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .room-name { font-weight: 600; font-size: 0.95em; }
+        .room-size { font-size: 0.8em; color: #aaa; margin-top: 4px; }
+        .room-pos { font-size: 0.75em; color: #888; margin-top: 2px; }
+        
+        .controls {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #0f3460;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-group label {
+            display: block;
+            font-size: 0.85em;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        
+        .control-group input {
+            width: 100%;
+            padding: 8px;
+            background: #0f3460;
+            border: 1px solid #1a4a7a;
+            border-radius: 4px;
+            color: white;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            background: #0a0a14;
+            position: relative;
+            overflow: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        
+        #blueprint-canvas {
+            background: #1a1a2e;
+            border: 2px solid #0f3460;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+        
+        .room-rect {
+            cursor: move;
+            transition: filter 0.2s;
+        }
+        
+        .room-rect:hover {
+            filter: brightness(1.1);
+        }
+        
+        .room-rect.selected {
+            stroke: #e94560;
+            stroke-width: 4;
+        }
+        
+        .room-rect.dragging {
+            opacity: 0.8;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+        }
+        
+        .grid-line {
+            stroke: #0f3460;
+            stroke-width: 0.5;
+            opacity: 0.3;
+        }
+        
+        .snap-indicator {
+            stroke: #e94560;
+            stroke-width: 2;
+            stroke-dasharray: 5,5;
+            fill: none;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .snap-indicator.active {
+            opacity: 0.5;
+        }
+        
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(22, 33, 62, 0.95);
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        
+        .instructions kbd {
+            background: #0f3460;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #e94560;
+        }
+        
+        .zoom-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 5px;
+        }
+        
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            background: #16213e;
+            border: 1px solid #0f3460;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+        
+        .zoom-btn:hover { background: #1a4a7a; }
+        
+        .stats-bar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(22, 33, 62, 0.95);
+            padding: 15px 20px;
+            border-radius: 8px;
+        }
+        
+        .stats-bar div {
+            font-size: 0.85em;
+            color: #aaa;
+        }
+        
+        .stats-bar span {
+            color: #e94560;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Interactive Blueprint Editor</h1>
+        <div class="header-controls">
+            <button class="btn btn-secondary" onclick="goBack()">← Back</button>
+            <button class="btn btn-secondary" onclick="resetLayout()">Reset Layout</button>
+            <button class="btn btn-secondary" onclick="toggleGrid()">Toggle Grid</button>
+            <button class="btn btn-primary" onclick="saveBlueprint()">Save & Download</button>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <div class="sidebar">
+            <h3>Rooms</h3>
+            <div class="room-list" id="room-list"></div>
+            
+            <div class="controls" id="room-controls" style="display: none;">
+                <h3>Selected Room</h3>
+                <div class="control-group">
+                    <label>X Position (feet)</label>
+                    <input type="number" id="room-x" step="0.5" onchange="updateRoomFromInput()">
+                </div>
+                <div class="control-group">
+                    <label>Y Position (feet)</label>
+                    <input type="number" id="room-y" step="0.5" onchange="updateRoomFromInput()">
+                </div>
+                <div class="control-group">
+                    <label>Width (feet)</label>
+                    <input type="number" id="room-width" step="0.5" onchange="updateRoomFromInput()">
+                </div>
+                <div class="control-group">
+                    <label>Height (feet)</label>
+                    <input type="number" id="room-height" step="0.5" onchange="updateRoomFromInput()">
+                </div>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <div class="stats-bar">
+                <div>Total Area: <span id="total-area">0</span> sq ft</div>
+                <div>Dimensions: <span id="dimensions">0' x 0'</span></div>
+                <div>Scale: <span id="scale-display">1ft = 10px</span></div>
+            </div>
+            
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomOut()">-</button>
+                <button class="zoom-btn" onclick="zoomIn()">+</button>
+            </div>
+            
+            <svg id="blueprint-canvas" width="800" height="600">
+                <defs>
+                    <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+                        <path d="M 50 0 L 0 0 0 50" fill="none" class="grid-line"/>
+                    </pattern>
+                </defs>
+                <rect id="grid-bg" width="100%" height="100%" fill="url(#grid)" />
+                <g id="rooms-layer"></g>
+                <rect id="snap-indicator" class="snap-indicator" x="0" y="0" width="0" height="0" />
+            </svg>
+            
+            <div class="instructions">
+                <kbd>Click</kbd> to select a room | 
+                <kbd>Drag</kbd> to move | 
+                <kbd>Arrow Keys</kbd> for precise movement | 
+                Rooms snap to grid automatically
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const SCALE = 10; // pixels per foot
+        const GRID_SIZE = 5; // feet per grid cell
+        let currentScale = 1;
+        let showGrid = true;
+        
+        // Room data
+        let rooms = [];
+        let selectedRoom = null;
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+        
+        // Room colors
+        const roomColors = {
+            'Living Room': '#E8F4F8',
+            'Kitchen': '#FFF8DC',
+            'Bedroom': '#E6E6FA',
+            'Bathroom': '#E0FFFF',
+            'Dining Room': '#F5F5DC',
+            'Hallway': '#F0F0F0',
+            'Entryway': '#FFFACD',
+            'Closet': '#D3D3D3',
+            'Laundry': '#F5DEB3',
+            'Garage': '#DCDCDC',
+            'Office': '#E0E0E0',
+            'Master Bedroom': '#D8BFD8',
+            'Master Bath': '#B0E0E6',
+        };
+        
+        // Initialize with data from parent window or load from server
+        function initEditor() {
+            // Try to get rooms from URL parameter or localStorage
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomsData = urlParams.get('rooms');
+            
+            if (roomsData) {
+                rooms = JSON.parse(decodeURIComponent(roomsData));
+            } else {
+                // Default demo rooms
+                rooms = [
+                    { id: 1, name: 'Living Room', type: 'Living Room', x: 10, y: 10, width: 18, height: 16 },
+                    { id: 2, name: 'Kitchen', type: 'Kitchen', x: 28, y: 10, width: 14, height: 12 },
+                    { id: 3, name: 'Master Bedroom', type: 'Master Bedroom', x: 10, y: 26, width: 16, height: 14 },
+                    { id: 4, name: 'Bedroom 2', type: 'Bedroom', x: 26, y: 26, width: 12, height: 12 },
+                ];
+            }
+            
+            renderRoomsList();
+            renderCanvas();
+            updateStats();
+        }
+        
+        function renderRoomsList() {
+            const list = document.getElementById('room-list');
+            list.innerHTML = rooms.map(room => `
+                <div class="room-item ${room.locked ? 'locked' : ''} ${selectedRoom === room ? 'selected' : ''}" 
+                     onclick="selectRoom(${room.id})" data-id="${room.id}">
+                    <div class="room-name">${room.name}</div>
+                    <div class="room-size">${room.width}' x ${room.height}' = ${Math.round(room.width * room.height)} sq ft</div>
+                    <div class="room-pos">Position: (${room.x}, ${room.y})</div>
+                </div>
+            `).join('');
+        }
+        
+        function renderCanvas() {
+            const layer = document.getElementById('rooms-layer');
+            layer.innerHTML = '';
+            
+            // Calculate canvas size based on rooms
+            let maxX = 0, maxY = 0;
+            rooms.forEach(room => {
+                maxX = Math.max(maxX, room.x + room.width);
+                maxY = Math.max(maxY, room.y + room.height);
+            });
+            
+            const canvas = document.getElementById('blueprint-canvas');
+            canvas.setAttribute('width', Math.max(800, (maxX + 20) * SCALE * currentScale));
+            canvas.setAttribute('height', Math.max(600, (maxY + 20) * SCALE * currentScale));
+            
+            rooms.forEach(room => {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', `room-rect ${selectedRoom === room ? 'selected' : ''}`);
+                g.setAttribute('data-id', room.id);
+                g.style.transform = `scale(${currentScale})`;
+                g.style.transformOrigin = '0 0';
+                
+                // Room rectangle
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', room.x * SCALE);
+                rect.setAttribute('y', room.y * SCALE);
+                rect.setAttribute('width', room.width * SCALE);
+                rect.setAttribute('height', room.height * SCALE);
+                rect.setAttribute('fill', roomColors[room.type] || '#E0E0E0');
+                rect.setAttribute('stroke', '#2C3E50');
+                rect.setAttribute('stroke-width', '3');
+                rect.setAttribute('rx', '2');
+                
+                // Room label
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', (room.x + room.width / 2) * SCALE);
+                text.setAttribute('y', (room.y + room.height / 2) * SCALE - 5);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', '#2C3E50');
+                text.setAttribute('font-size', '12');
+                text.setAttribute('font-weight', 'bold');
+                text.textContent = room.name;
+                
+                // Room dimensions
+                const dimText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                dimText.setAttribute('x', (room.x + room.width / 2) * SCALE);
+                dimText.setAttribute('y', (room.y + room.height / 2) * SCALE + 10);
+                dimText.setAttribute('text-anchor', 'middle');
+                dimText.setAttribute('fill', '#666');
+                dimText.setAttribute('font-size', '10');
+                dimText.textContent = `${room.width}' x ${room.height}'`;
+                
+                g.appendChild(rect);
+                g.appendChild(text);
+                g.appendChild(dimText);
+                
+                // Event listeners
+                g.addEventListener('mousedown', (e) => startDrag(e, room));
+                
+                layer.appendChild(g);
+            });
+        }
+        
+        function selectRoom(id) {
+            selectedRoom = rooms.find(r => r.id === id);
+            renderRoomsList();
+            renderCanvas();
+            updateRoomControls();
+        }
+        
+        function updateRoomControls() {
+            const controls = document.getElementById('room-controls');
+            if (selectedRoom) {
+                controls.style.display = 'block';
+                document.getElementById('room-x').value = selectedRoom.x;
+                document.getElementById('room-y').value = selectedRoom.y;
+                document.getElementById('room-width').value = selectedRoom.width;
+                document.getElementById('room-height').value = selectedRoom.height;
+            } else {
+                controls.style.display = 'none';
+            }
+        }
+        
+        function updateRoomFromInput() {
+            if (!selectedRoom) return;
+            
+            selectedRoom.x = parseFloat(document.getElementById('room-x').value) || 0;
+            selectedRoom.y = parseFloat(document.getElementById('room-y').value) || 0;
+            selectedRoom.width = parseFloat(document.getElementById('room-width').value) || 10;
+            selectedRoom.height = parseFloat(document.getElementById('room-height').value) || 10;
+            
+            // Snap to grid
+            selectedRoom.x = Math.round(selectedRoom.x / GRID_SIZE) * GRID_SIZE;
+            selectedRoom.y = Math.round(selectedRoom.y / GRID_SIZE) * GRID_SIZE;
+            
+            renderCanvas();
+            renderRoomsList();
+            updateStats();
+        }
+        
+        function startDrag(e, room) {
+            if (room.locked) return;
+            
+            e.preventDefault();
+            selectedRoom = room;
+            isDragging = true;
+            
+            const rect = document.getElementById('blueprint-canvas').getBoundingClientRect();
+            dragOffset.x = (e.clientX - rect.left) / currentScale / SCALE - room.x;
+            dragOffset.y = (e.clientY - rect.top) / currentScale / SCALE - room.y;
+            
+            renderRoomsList();
+            renderCanvas();
+            updateRoomControls();
+            
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', stopDrag);
+        }
+        
+        function onDrag(e) {
+            if (!isDragging || !selectedRoom) return;
+            
+            const rect = document.getElementById('blueprint-canvas').getBoundingClientRect();
+            let newX = ((e.clientX - rect.left) / currentScale / SCALE) - dragOffset.x;
+            let newY = ((e.clientY - rect.top) / currentScale / SCALE) - dragOffset.y;
+            
+            // Snap to grid
+            newX = Math.round(newX / GRID_SIZE) * GRID_SIZE;
+            newY = Math.round(newY / GRID_SIZE) * GRID_SIZE;
+            
+            // Keep within bounds
+            newX = Math.max(0, newX);
+            newY = Math.max(0, newY);
+            
+            selectedRoom.x = newX;
+            selectedRoom.y = newY;
+            
+            renderCanvas();
+            renderRoomsList();
+            updateRoomControls();
+            
+            // Show snap indicator
+            showSnapIndicator(newX, newY, selectedRoom.width, selectedRoom.height);
+        }
+        
+        function stopDrag() {
+            isDragging = false;
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', stopDrag);
+            hideSnapIndicator();
+        }
+        
+        function showSnapIndicator(x, y, w, h) {
+            const indicator = document.getElementById('snap-indicator');
+            indicator.setAttribute('x', x * SCALE * currentScale);
+            indicator.setAttribute('y', y * SCALE * currentScale);
+            indicator.setAttribute('width', w * SCALE * currentScale);
+            indicator.setAttribute('height', h * SCALE * currentScale);
+            indicator.classList.add('active');
+        }
+        
+        function hideSnapIndicator() {
+            document.getElementById('snap-indicator').classList.remove('active');
+        }
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (!selectedRoom) return;
+            
+            const step = e.shiftKey ? GRID_SIZE : 1;
+            
+            switch(e.key) {
+                case 'ArrowUp': selectedRoom.y -= step; break;
+                case 'ArrowDown': selectedRoom.y += step; break;
+                case 'ArrowLeft': selectedRoom.x -= step; break;
+                case 'ArrowRight': selectedRoom.x += step; break;
+                case 'Delete':
+                case 'Backspace':
+                    // Remove room (optional)
+                    break;
+                default: return;
+            }
+            
+            e.preventDefault();
+            selectedRoom.x = Math.max(0, selectedRoom.x);
+            selectedRoom.y = Math.max(0, selectedRoom.y);
+            
+            renderCanvas();
+            renderRoomsList();
+            updateRoomControls();
+            updateStats();
+        });
+        
+        function updateStats() {
+            const totalArea = rooms.reduce((sum, r) => sum + (r.width * r.height), 0);
+            let maxX = 0, maxY = 0;
+            rooms.forEach(room => {
+                maxX = Math.max(maxX, room.x + room.width);
+                maxY = Math.max(maxY, room.y + room.height);
+            });
+            
+            document.getElementById('total-area').textContent = Math.round(totalArea).toLocaleString();
+            document.getElementById('dimensions').textContent = `${maxX}' x ${maxY}'`;
+        }
+        
+        function zoomIn() {
+            currentScale = Math.min(currentScale * 1.2, 3);
+            document.getElementById('scale-display').textContent = `1ft = ${Math.round(SCALE * currentScale)}px`;
+            renderCanvas();
+        }
+        
+        function zoomOut() {
+            currentScale = Math.max(currentScale / 1.2, 0.5);
+            document.getElementById('scale-display').textContent = `1ft = ${Math.round(SCALE * currentScale)}px`;
+            renderCanvas();
+        }
+        
+        function toggleGrid() {
+            showGrid = !showGrid;
+            document.getElementById('grid-bg').style.display = showGrid ? 'block' : 'none';
+        }
+        
+        function resetLayout() {
+            if (confirm('Reset all room positions?')) {
+                initEditor();
+            }
+        }
+        
+        function saveBlueprint() {
+            // Show loading
+            const btn = document.querySelector('.btn-primary');
+            const originalText = btn.textContent;
+            btn.textContent = 'Saving...';
+            btn.disabled = true;
+            
+            // Prepare room data with proper types
+            const roomsData = rooms.map((room, index) => ({
+                id: room.id || index + 1,
+                name: room.name,
+                type: room.type || 'BEDROOM',
+                x: parseFloat(room.x),
+                y: parseFloat(room.y),
+                width: parseFloat(room.width),
+                height: parseFloat(room.height)
+            }));
+            
+            // Send updated positions to server
+            fetch('/update-layout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rooms: roomsData })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.error || 'Server error'); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+                
+                if (data.success) {
+                    // Download the updated SVG
+                    window.location.href = `/download/${data.filename}`;
+                } else {
+                    alert('Error saving blueprint: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+                alert('Error: ' + err.message);
+                console.error(err);
+            });
+        }
+        
+        function goBack() {
+            if (confirm('Go back to generator? Any unsaved changes will be lost.')) {
+                window.close();
+                // Fallback if window.close() doesn't work
+                window.location.href = '/';
+            }
+        }
+        
+        // Initialize
+        initEditor();
+    </script>
+</body>
+</html>

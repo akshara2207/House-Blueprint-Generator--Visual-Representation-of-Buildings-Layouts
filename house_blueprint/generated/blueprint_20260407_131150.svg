@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="388" viewBox="0 0 500 388">
+  <style>
+            .room-label { font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; }
+            .room-area { font-family: Arial, sans-serif; font-size: 9px; fill: #666; }
+            .title { font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; }
+            .subtitle { font-family: Arial, sans-serif; font-size: 11px; fill: #666; }
+        </style>
+  <g transform="translate(50, 50)">
+    <rect x="0" y="0" width="144" height="128" fill="#E8F4F8" stroke="#2C3E50" stroke-width="3" />
+    <text x="72.0" y="61.0" text-anchor="middle" class="room-label">Living Room</text>
+    <text x="72.0" y="74.0" text-anchor="middle" class="room-area">18' x 16'</text>
+    <rect x="144" y="0" width="96" height="96" fill="#F5F5DC" stroke="#2C3E50" stroke-width="3" />
+    <text x="192.0" y="45.0" text-anchor="middle" class="room-label">Dining Room</text>
+    <text x="192.0" y="58.0" text-anchor="middle" class="room-area">12' x 12'</text>
+    <rect x="240" y="0" width="96" height="96" fill="#FFF8DC" stroke="#2C3E50" stroke-width="3" />
+    <text x="288.0" y="45.0" text-anchor="middle" class="room-label">Kitchen</text>
+    <text x="288.0" y="58.0" text-anchor="middle" class="room-area">12' x 12'</text>
+    <rect x="0" y="112" width="128" height="112" fill="#E8F4F8" stroke="#2C3E50" stroke-width="3" />
+    <text x="64.0" y="165.0" text-anchor="middle" class="room-label">Family Room</text>
+    <text x="64.0" y="178.0" text-anchor="middle" class="room-area">16' x 14'</text>
+    <rect x="128" y="112" width="128" height="96" fill="#D8BFD8" stroke="#2C3E50" stroke-width="3" />
+    <text x="192.0" y="157.0" text-anchor="middle" class="room-label">Master Bedroom</text>
+    <text x="192.0" y="170.0" text-anchor="middle" class="room-area">16' x 12'</text>
+    <rect x="256" y="112" width="96" height="96" fill="#E6E6FA" stroke="#2C3E50" stroke-width="3" />
+    <text x="304.0" y="157.0" text-anchor="middle" class="room-label">Bedroom 2</text>
+    <text x="304.0" y="170.0" text-anchor="middle" class="room-area">12' x 12'</text>
+    <rect x="128" y="208" width="80" height="80" fill="#B0E0E6" stroke="#2C3E50" stroke-width="3" />
+    <text x="168.0" y="245.0" text-anchor="middle" class="room-label">Master Bath</text>
+    <text x="168.0" y="258.0" text-anchor="middle" class="room-area">10' x 10'</text>
+    <rect x="352" y="112" width="48" height="64" fill="#F5DEB3" stroke="#2C3E50" stroke-width="3" />
+    <text x="376.0" y="141.0" text-anchor="middle" class="room-label">Laundry</text>
+    <text x="376.0" y="154.0" text-anchor="middle" class="room-area">6' x 8'</text>
+    <line x1="144" y1="36.0" x2="144" y2="60.0" stroke="white" stroke-width="5" />
+    <rect x="56.0" y="-2" width="32.0" height="4" fill="#87CEEB" />
+    <rect x="-2" y="48.0" width="4" height="32.0" fill="#87CEEB" />
+    <line x1="144" y1="48.0" x2="144" y2="72.0" stroke="white" stroke-width="5" />
+    <line x1="240" y1="36.0" x2="240" y2="60.0" stroke="white" stroke-width="5" />
+    <rect x="176.0" y="-2" width="32.0" height="4" fill="#87CEEB" />
+    <line x1="240" y1="36.0" x2="240" y2="60.0" stroke="white" stroke-width="5" />
+    <rect x="272.0" y="-2" width="32.0" height="4" fill="#87CEEB" />
+    <line x1="128" y1="148.0" x2="128" y2="172.0" stroke="white" stroke-width="5" />
+    <line x1="128" y1="204.0" x2="128" y2="228.0" stroke="white" stroke-width="5" />
+    <rect x="-2" y="152.0" width="4" height="32.0" fill="#87CEEB" />
+    <line x1="128" y1="154.85714285714286" x2="128" y2="178.85714285714286" stroke="white" stroke-width="5" />
+    <line x1="256" y1="148.0" x2="256" y2="172.0" stroke="white" stroke-width="5" />
+    <line x1="156.0" y1="208" x2="180.0" y2="208" stroke="white" stroke-width="5" />
+    <line x1="256" y1="148.0" x2="256" y2="172.0" stroke="white" stroke-width="5" />
+    <line x1="352" y1="132.0" x2="352" y2="156.0" stroke="white" stroke-width="5" />
+    <line x1="128" y1="201.71428571428572" x2="128" y2="225.71428571428572" stroke="white" stroke-width="5" />
+    <line x1="171.0" y1="208" x2="195.0" y2="208" stroke="white" stroke-width="5" />
+    <rect x="152.0" y="286" width="32.0" height="4" fill="#87CEEB" />
+    <line x1="352" y1="142.66666666666669" x2="352" y2="166.66666666666669" stroke="white" stroke-width="5" />
+    <rect x="398" y="128.0" width="4" height="32.0" fill="#87CEEB" />
+  </g>
+  <text x="250.0" y="25" text-anchor="middle" class="title">My Dream Home</text>
+  <text x="250.0" y="42" text-anchor="middle" class="subtitle">8 Rooms | 1284 sq ft | 50' x 36'</text>
+</svg>

@@ -82,6 +82,11 @@ class Room:
         self.windows.append(Window(wall, position, width, height))
         return self
     
+    def add_feature(self, feature: str) -> 'Room':
+        """Add a special feature to the room."""
+        self.features.append(feature)
+        return self
+    
     def intersects(self, other: 'Room', padding: float = 0.0) -> bool:
         b1 = self.bounds
         b2 = other.bounds

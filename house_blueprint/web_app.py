@@ -140,6 +140,80 @@ def generate_blueprint():
         }), 500
 
 
+@app.route('/editor')
+def editor():
+    """Interactive drag-and-drop editor."""
+    return render_template('editor.html')
+
+
+@app.route('/update-layout', methods=['POST'])
+def update_layout():
+    """Update blueprint with custom room positions from editor."""
+    try:
+        data = request.get_json()
+        rooms_data = data.get('rooms', [])
+        
+        # Create house from room data
+        house = House(name="Custom Layout")
+        
+        # Room type mapping
+        type_mapping = {
+            'LIVING ROOM': RoomType.LIVING_ROOM,
+            'KITCHEN': RoomType.KITCHEN,
+            'BEDROOM': RoomType.BEDROOM,
+            'BATHROOM': RoomType.BATHROOM,
+            'DINING ROOM': RoomType.DINING_ROOM,
+            'HALLWAY': RoomType.HALLWAY,
+            'ENTRYWAY': RoomType.ENTRYWAY,
+            'CLOSET': RoomType.CLOSET,
+            'LAUNDRY': RoomType.LAUNDRY,
+            'GARAGE': RoomType.GARAGE,
+            'OFFICE': RoomType.OFFICE,
+            'MASTER BEDROOM': RoomType.MASTER_BEDROOM,
+            'MASTER BATH': RoomType.MASTER_BATHROOM,
+            'MASTER BATHROOM': RoomType.MASTER_BATHROOM,
+        }
+        
+        for room_data in rooms_data:
+            room_type_str = room_data.get('type', 'BEDROOM').upper()
+            room_type = type_mapping.get(room_type_str, RoomType.BEDROOM)
+            
+            room = Room(
+                name=room_data['name'],
+                room_type=room_type,
+                width=float(room_data['width']),
+                height=float(room_data['height']),
+                x=float(room_data['x']),
+                y=float(room_data['y'])
+            )
+            house.add_room(room)
+        
+        # Add doors between adjacent rooms
+        generator._add_interior_doors(house)
+        generator._add_exterior_windows(house)
+        
+        # Generate SVG
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"blueprint_custom_{timestamp}.svg"
+        filepath = os.path.join(OUTPUT_DIR, filename)
+        
+        renderer.render(house, filepath)
+        
+        return jsonify({
+            'success': True,
+            'filename': filename,
+            'message': 'Layout saved successfully'
+        })
+        
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
+
+
 @app.route('/download/<filename>')
 def download_blueprint(filename):
     """Download SVG file."""

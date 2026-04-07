@@ -516,6 +516,7 @@
 
                     <div class="actions">
                         <button class="btn-secondary" id="download-btn" style="display: none;">Download SVG</button>
+                        <button class="btn-secondary" id="edit-btn" style="display: none; background: #667eea;" onclick="openEditor()">Edit Layout</button>
                     </div>
                 </div>
             </div>
@@ -523,6 +524,14 @@
     </div>
 
     <script>
+        // Open interactive editor
+        function openEditor() {
+            if (window.generatedRooms) {
+                const roomsData = encodeURIComponent(JSON.stringify(window.generatedRooms));
+                window.open(`/editor?rooms=${roomsData}`, '_blank');
+            }
+        }
+
         // Toggle advanced options
         function toggleAdvanced() {
             const advanced = document.getElementById('advanced-options');
@@ -641,6 +650,10 @@
                         window.location.href = `/download/${result.filename}`;
                     };
                     downloadBtn.style.display = 'inline-block';
+                    
+                    // Store rooms for editor
+                    window.generatedRooms = result.rooms;
+                    document.getElementById('edit-btn').style.display = 'inline-block';
                     
                     results.style.display = 'block';
                 } else {
