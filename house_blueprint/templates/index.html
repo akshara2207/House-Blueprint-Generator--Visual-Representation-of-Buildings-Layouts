@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Blueprint Generator - Custom Room Placement</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { max-width: 1600px; margin: 0 auto; }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        header p { font-size: 1.1em; opacity: 0.9; }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content { grid-template-columns: 1fr; }
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .panel h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .form-group { margin-bottom: 18px; }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #555;
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .preset-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+        
+        .preset-btn:hover { border-color: #667eea; background: #f8f9ff; }
+        .preset-btn.active { border-color: #667eea; background: #667eea; color: white; }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn-primary:hover { transform: translateY(-2px); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        
+        .btn-secondary {
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95em;
+            cursor: pointer;
+        }
+        
+        /* Room Customization Section */
+        .room-customization {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px dashed #e0e0e0;
+        }
+        
+        .room-customization h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .room-config {
+            background: #f8f9ff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .room-config h4 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+        
+        .room-config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .room-config-grid .form-group {
+            margin-bottom: 10px;
+        }
+        
+        .room-config-grid label {
+            font-size: 0.85em;
+            margin-bottom: 4px;
+        }
+        
+        .room-config-grid input,
+        .room-config-grid select {
+            padding: 8px;
+            font-size: 0.9em;
+        }
+        
+        .toggle-advanced {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 0.9em;
+            text-decoration: underline;
+            margin-bottom: 15px;
+        }
+        
+        .advanced-options {
+            display: none;
+        }
+        
+        .advanced-options.active {
+            display: block;
+        }
+        
+        /* Preview Panel */
+        .preview-panel {
+            min-height: 700px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .preview-area {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 450px;
+            overflow: auto;
+            padding: 20px;
+        }
+        
+        .preview-placeholder {
+            text-align: center;
+            color: #888;
+        }
+        
+        .blueprint-svg {
+            max-width: 100%;
+            max-height: 100%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .room-list {
+            margin-top: 20px;
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .room-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9em;
+        }
+        
+        .room-item:last-child { border-bottom: none; }
+        
+        .room-info { display: flex; flex-direction: column; }
+        .room-name { font-weight: 600; color: #333; }
+        .room-pos { font-size: 0.8em; color: #888; }
+        .room-size { text-align: right; color: #666; }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading.active { display: block; }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .error-message.active { display: block; }
+        
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .direction-hint {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 5px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>House Blueprint Generator</h1>
+            <p>Design your dream home with customizable room placement</p>
+        </header>
+
+        <div class="main-content">
+            <div class="panel">
+                <h2>Quick Presets</h2>
+                <div class="presets">
+                    {% for key, preset in presets.items() %}
+                    <button class="preset-btn" data-preset="{{ key }}" 
+                            data-bedrooms="{{ preset.bedrooms }}"
+                            data-bathrooms="{{ preset.bathrooms }}"
+                            data-style="{{ preset.style }}">
+                        <strong>{{ preset.name }}</strong><br>
+                        <small>{{ preset.bedrooms }} bed, {{ preset.bathrooms }} bath</small>
+                    </button>
+                    {% endfor %}
+                </div>
+
+                <h2>Configuration</h2>
+                <form id="blueprint-form">
+                    <div class="form-group">
+                        <label for="name">House Name</label>
+                        <input type="text" id="name" name="name" value="My Dream Home">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="style">House Style</label>
+                        <select id="style" name="style">
+                            {% for value, label in styles %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bedrooms">Bedrooms</label>
+                        <input type="number" id="bedrooms" name="bedrooms" min="1" max="6" value="3">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bathrooms">Bathrooms</label>
+                        <input type="number" id="bathrooms" name="bathrooms" min="1" max="4" value="2">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Additional Rooms</label>
+                        <div class="checkbox-group">
+                            {% for value, label in room_types %}
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="room_{{ value }}" name="special_rooms" value="{{ value }}">
+                                <label for="room_{{ value }}">{{ label }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="width">Max Width (feet)</label>
+                        <input type="number" id="width" name="width" min="30" max="100" value="50">
+                    </div>
+
+                    <button type="button" class="toggle-advanced" onclick="toggleAdvanced()">
+                        + Show Room Customization Options
+                    </button>
+
+                    <div class="advanced-options" id="advanced-options">
+                        <div class="room-customization">
+                            <h3>Room Size & Direction Preferences</h3>
+                            
+                            <div class="room-config">
+                                <h4>Living Room</h4>
+                                <div class="room-config-grid">
+                                    <div class="form-group">
+                                        <label>Width (ft)</label>
+                                        <input type="number" id="living_width" value="18" min="10" max="40">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Height (ft)</label>
+                                        <input type="number" id="living_height" value="16" min="10" max="30">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="room-config">
+                                <h4>Master Bedroom</h4>
+                                <div class="room-config-grid">
+                                    <div class="form-group">
+                                        <label>Width (ft)</label>
+                                        <input type="number" id="master_width" value="16" min="12" max="25">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Height (ft)</label>
+                                        <input type="number" id="master_height" value="14" min="12" max="20">
+                                    </div>
+                                    <div class="form-group" style="grid-column: 1 / -1;">
+                                        <label>Preferred Direction</label>
+                                        <select id="master_direction">
+                                            {% for value, label in directions %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="room-config">
+                                <h4>Kitchen</h4>
+                                <div class="room-config-grid">
+                                    <div class="form-group">
+                                        <label>Width (ft)</label>
+                                        <input type="number" id="kitchen_width" value="14" min="8" max="20">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Height (ft)</label>
+                                        <input type="number" id="kitchen_height" value="12" min="8" max="18">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="room-config">
+                                <h4>Other Bedrooms</h4>
+                                <div class="room-config-grid">
+                                    <div class="form-group">
+                                        <label>Width (ft)</label>
+                                        <input type="number" id="bedroom_width" value="12" min="10" max="18">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Height (ft)</label>
+                                        <input type="number" id="bedroom_height" value="12" min="10" max="16">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <p class="direction-hint">
+                                Note: Direction preferences guide room placement. 
+                                The generator will try to place rooms according to your preferences while maintaining a valid layout.
+                            </p>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Generate Blueprint</button>
+                </form>
+            </div>
+
+            <div class="panel preview-panel">
+                <h2>Blueprint Preview</h2>
+                
+                <div class="preview-area" id="preview-area">
+                    <div class="preview-placeholder">
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity: 0.5; margin-bottom: 15px;">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <path d="M3 9h18M9 21V9"/>
+                        </svg>
+                        <p>Your blueprint will appear here</p>
+                        <p style="font-size: 0.9em; margin-top: 10px;">Configure your house and click "Generate Blueprint"</p>
+                    </div>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Generating your blueprint...</p>
+                </div>
+
+                <div class="error-message" id="error-message"></div>
+
+                <div id="results" style="display: none;">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-rooms">0</div>
+                            <div class="stat-label">Rooms</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-area">0</div>
+                            <div class="stat-label">Total sq ft</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-dims">0</div>
+                            <div class="stat-label">Dimensions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-avg">0</div>
+                            <div class="stat-label">Avg Room Size</div>
+                        </div>
+                    </div>
+
+                    <div class="room-list" id="room-list"></div>
+
+                    <div class="actions">
+                        <button class="btn-secondary" id="download-btn" style="display: none;">Download SVG</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle advanced options
+        function toggleAdvanced() {
+            const advanced = document.getElementById('advanced-options');
+            const btn = document.querySelector('.toggle-advanced');
+            advanced.classList.toggle('active');
+            btn.textContent = advanced.classList.contains('active') 
+                ? '- Hide Room Customization Options' 
+                : '+ Show Room Customization Options';
+        }
+
+        // Preset button handling
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                document.getElementById('bedrooms').value = this.dataset.bedrooms;
+                document.getElementById('bathrooms').value = this.dataset.bathrooms;
+                document.getElementById('style').value = this.dataset.style;
+            });
+        });
+
+        // Form submission
+        document.getElementById('blueprint-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const loading = document.getElementById('loading');
+            const previewArea = document.getElementById('preview-area');
+            const results = document.getElementById('results');
+            const errorMessage = document.getElementById('error-message');
+            const downloadBtn = document.getElementById('download-btn');
+            
+            loading.classList.add('active');
+            previewArea.style.display = 'none';
+            results.style.display = 'none';
+            errorMessage.classList.remove('active');
+            downloadBtn.style.display = 'none';
+            
+            // Collect form data
+            const specialRooms = [];
+            document.querySelectorAll('input[name="special_rooms"]:checked').forEach(cb => {
+                specialRooms.push(cb.value);
+            });
+            
+            // Build room preferences
+            const roomPreferences = {};
+            
+            // Living room preferences
+            roomPreferences['living_room'] = {
+                width: parseFloat(document.getElementById('living_width').value),
+                height: parseFloat(document.getElementById('living_height').value)
+            };
+            
+            // Master bedroom preferences
+            roomPreferences['master_bedroom'] = {
+                width: parseFloat(document.getElementById('master_width').value),
+                height: parseFloat(document.getElementById('master_height').value),
+                direction: document.getElementById('master_direction').value
+            };
+            
+            // Kitchen preferences
+            roomPreferences['kitchen'] = {
+                width: parseFloat(document.getElementById('kitchen_width').value),
+                height: parseFloat(document.getElementById('kitchen_height').value)
+            };
+            
+            // Other bedrooms preferences
+            roomPreferences['bedroom_default'] = {
+                width: parseFloat(document.getElementById('bedroom_width').value),
+                height: parseFloat(document.getElementById('bedroom_height').value)
+            };
+            
+            const data = {
+                name: document.getElementById('name').value,
+                style: document.getElementById('style').value,
+                bedrooms: parseInt(document.getElementById('bedrooms').value),
+                bathrooms: parseInt(document.getElementById('bathrooms').value),
+                width: parseInt(document.getElementById('width').value),
+                special_rooms: specialRooms,
+                room_preferences: roomPreferences
+            };
+            
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    previewArea.innerHTML = result.svg;
+                    previewArea.style.display = 'flex';
+                    
+                    document.getElementById('stat-rooms').textContent = result.stats.total_rooms;
+                    document.getElementById('stat-area').textContent = result.stats.total_area.toLocaleString();
+                    document.getElementById('stat-dims').textContent = result.stats.dimensions;
+                    document.getElementById('stat-avg').textContent = Math.round(result.stats.average_room_size).toLocaleString();
+                    
+                    const roomList = document.getElementById('room-list');
+                    roomList.innerHTML = result.rooms.map(room => `
+                        <div class="room-item">
+                            <div class="room-info">
+                                <span class="room-name">${room.name}</span>
+                                <span class="room-pos">${room.type} at (${room.x}, ${room.y})</span>
+                            </div>
+                            <div class="room-size">
+                                ${room.width}' x ${room.height}'<br>
+                                <small>${room.area} sq ft</small>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    downloadBtn.onclick = () => {
+                        window.location.href = `/download/${result.filename}`;
+                    };
+                    downloadBtn.style.display = 'inline-block';
+                    
+                    results.style.display = 'block';
+                } else {
+                    throw new Error(result.error || 'Unknown error');
+                }
+            } catch (error) {
+                errorMessage.textContent = 'Error: ' + error.message;
+                errorMessage.classList.add('active');
+                previewArea.style.display = 'flex';
+            } finally {
+                loading.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
